@@ -1,7 +1,7 @@
 package ch.sthomas.neuralnetwork;
 
 public class Network {
-    public static final ActivationType ACTIVATION_TYPE = ActivationType.SIGMOID;
+    public static final ActivationType ACTIVATION_TYPE = ActivationType.LINEAR;
 
     private final Neuron[][] neurons;
 
@@ -42,5 +42,5 @@ public class Network {
 
 enum ActivationType {
     LINEAR,
-    SIGMOID
+    SIGMOID // Requires a more complex learning algorithm with derivatives, see https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e
 }

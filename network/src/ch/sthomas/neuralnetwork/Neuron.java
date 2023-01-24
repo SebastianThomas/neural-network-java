@@ -29,7 +29,7 @@ public class Neuron {
     }
 
     /**
-     * Train the Neuron with the perception-algorithm.
+     * Train the Neuron with a perception-algorithm.
      *
      * @param inputs         the input that should resolve to the expected result
      * @param expectedResult the expectation of the result the Neuron should be trained towards
