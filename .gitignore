@@ -10,7 +10,7 @@ out
 
 # IntelliJ files
 .idea
-main/main.iml
+network/network.iml
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
