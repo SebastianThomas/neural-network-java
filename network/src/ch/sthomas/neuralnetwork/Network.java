@@ -25,12 +25,12 @@ public class Network {
      * @return an array of length neurons[neurons.length - 1].length containing all the values the output layer produced
      */
     public double[] calculateOutputs(double[] inputs) {
-        for (Neuron[] neurons : this.neurons) {
+        for (Neuron[] layer : this.neurons) {
             // Initialize array for the newly calculated inputs for the next layer
-            double[] newInputs = new double[neurons.length];
+            double[] newInputs = new double[layer.length];
             // Calculate the new values
-            for (int i = 0; i < neurons.length; i++) {
-                newInputs[i] = neurons[i].activate(inputs);
+            for (int i = 0; i < layer.length; i++) {
+                newInputs[i] = layer[i].activate(inputs);
             }
             // Override the old inputs with the new ones
             inputs = newInputs;
