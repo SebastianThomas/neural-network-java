@@ -1,5 +1,8 @@
 package ch.sthomas.neuralnetwork;
 
+import java.util.Arrays;
+import java.util.HashMap;
+
 public class Neuron {
     /**
      * The value of alpha for training (to avoid overshooting when correcting a value.
@@ -174,5 +177,26 @@ public class Neuron {
      */
     private double linearActivation(double input, int inputIndex) {
         return z(input, inputIndex);
+    }
+
+    /**
+     * Indicates whether some other object is "equal to" this one.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof (Neuron n)
+                && this.weights == n.weights
+                && this.bias == n.bias
+                && this.activationValue == n.activationValue;
+    }
+
+    /**
+     * Returns a string representation of the object.
+     *
+     * @return a string representation of the object.
+     */
+    @Override
+    public String toString() {
+        return "N={" + Arrays.toString(this.weights) + ";b=" + this.bias + "a=" + this.activationValue + "}";
     }
 }
