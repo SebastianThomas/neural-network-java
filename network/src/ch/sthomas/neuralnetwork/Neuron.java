@@ -1,9 +1,13 @@
 package ch.sthomas.neuralnetwork;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
 
-public class Neuron {
+public class Neuron implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /**
      * The value of alpha for training (to avoid overshooting when correcting a value.
      */
@@ -15,7 +19,10 @@ public class Neuron {
 
     private double[] weights;
     private double bias;
-    private double activationValue;
+    /**
+     * Unused
+     */
+    private double activationThreshold;
 
     /**
      * Create a new Neuron with
@@ -25,10 +32,10 @@ public class Neuron {
      * @see Neuron#addToWeights(double[])
      * @see Neuron#addToBias(double)
      */
-    public Neuron(double[] weights, double bias, double activationValue) {
+    public Neuron(double[] weights, double bias) {
         this.weights = weights;
         this.bias = bias;
-        this.activationValue = activationValue;
+        this.activationThreshold = this.calcActivationThreshold();
     }
 
     /**
@@ -58,26 +65,22 @@ public class Neuron {
      * @see Network#ACTIVATION_TYPE
      */
     public double activate(double[] inputs) {
-        return calculateValue(inputs) > this.activationValue ? 1.0 : 0.0;
+        return calculateValue(inputs); // > this.activationValue ? 1.0 : 0.0;
     }
 
     /**
-     * Calculate the value of the neuron.
+     * Calculate the value of the neuron. Represents {@code a}, the activation value, in the 3B1B-video.
      *
      * @param inputs the inputs to calculate the value for
      * @return the value of the neuron given the inputs
      * @see Network#ACTIVATION_TYPE
      */
     private double calculateValue(double[] inputs) {
-        double sum = 0.0;
         // If inputs have more value than the weights or the other way around, the resulting values should just be 0, so they can just be ignored
-        for (int i = 0; i < Math.min(inputs.length, this.weights.length); i++) {
-            sum += switch (Network.ACTIVATION_TYPE) {
-                case LINEAR -> linearActivation(inputs[i], i);
-                case SIGMOID -> sigmoidActivation(inputs[i], i);
-            };
-        }
-        return sum;
+        return switch (Network.ACTIVATION_TYPE) {
+            case LINEAR -> linearActivation(inputs);
+            case SIGMOID -> sigmoidActivation(inputs);
+        };
     }
 
     /**
@@ -127,56 +130,66 @@ public class Neuron {
     /**
      * Set the activation value to a new value.
      *
-     * @param activationValue the new value for the activation value
+     * @param activationThreshold the new value for the activation value
      * @see Neuron#addToActivationValue(double)
      */
-    public void setActivationValue(double activationValue) {
-        this.activationValue = activationValue;
+    public void setActivationThreshold(double activationThreshold) {
+        this.activationThreshold = activationThreshold;
     }
 
     /**
      * Add a value to the activation value. To reduce the activation value, value may be negative.
      *
      * @param value the value to add to the activation value
-     * @see Neuron#setActivationValue(double)
+     * @see Neuron#setActivationThreshold(double)
      */
     public void addToActivationValue(double value) {
-        this.activationValue += value;
+        this.activationThreshold += value;
+    }
+
+    private double calcActivationThreshold() {
+        return 0.0;
     }
 
     /**
-     * Return the value of z = w_T * x + b, where b = bias
+     * Return the value of z = w^L * x + b, where b = bias
      *
-     * @param x           the value of the input (over the incoming edge)
-     * @param weightIndex T in the equation, the index of the weight to be used (which input edge is being calculated)
      * @return the value of z
      */
-    private double z(double x, int weightIndex) {
-        return this.weights[weightIndex] * x + this.bias;
+    public double z(double[] x) {
+        double sum = 0.0;
+        for (int i = 0; i < this.weights.length; i++) {
+            sum += this.weights[i] * x[i];
+        }
+        sum += this.bias;
+        return sum;
     }
 
     /**
      * Return the value of the sigmoid function s = 1 / (1 + e^z).
      * Source: <a href="https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e">TowardsDataAnalysis</a>
      *
-     * @param input      the value of the input
-     * @param inputIndex the index of the incoming edge
+     * @param input the value of the input
      * @return the value of s
-     * @see Neuron#z(double, int)
+     * @see Neuron#z(double[])
      */
-    private double sigmoidActivation(double input, int inputIndex) {
-        return (1 / (1 + Math.exp(-z(input, inputIndex))));
+    private double sigmoidActivation(double[] input) {
+        return (1 / (1 + Math.exp(-z(input))));
     }
 
     /**
      * Return the value of a linear function with z = w_T * x + b, where b = bias
      *
-     * @param input      the input value x
-     * @param inputIndex the index of the edge from which the input value is from
+     * @param input the input value x
      * @return the value of z
      */
-    private double linearActivation(double input, int inputIndex) {
-        return z(input, inputIndex);
+    private double linearActivation(double[] input) {
+        return z(input);
+    }
+
+    public static double sigmoidDerivative(Neuron target, double[] input) {
+        double activation = target.sigmoidActivation(input);
+        return activation * (1 - activation);
     }
 
     /**
@@ -187,7 +200,7 @@ public class Neuron {
         return obj instanceof (Neuron n)
                 && this.weights == n.weights
                 && this.bias == n.bias
-                && this.activationValue == n.activationValue;
+                && this.activationThreshold == n.activationThreshold;
     }
 
     /**
@@ -197,6 +210,6 @@ public class Neuron {
      */
     @Override
     public String toString() {
-        return "N={" + Arrays.toString(this.weights) + ";b=" + this.bias + "a=" + this.activationValue + "}";
+        return "N={" + Arrays.toString(this.weights) + ";b=" + this.bias + ";t=" + this.activationThreshold + "}";
     }
 }

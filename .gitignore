@@ -2,6 +2,10 @@
 *.class
 out
 
+# Serialized network files
+tmp/networks
+/tmp/networks/*.network
+
 # Log file
 *.log
 
