@@ -229,8 +229,8 @@ public class Network implements Serializable {
             }
 
             // 1. Multiply the Training effectiveness and 2. Take the average instead of the sum
-//            res[i] *= (Neuron.TRAINING_ALPHA / activations.length);
-            res[i] /= activations.length;
+            res[i] *= (Neuron.TRAINING_ALPHA / activations.length);
+
         }
         return res;
     }
