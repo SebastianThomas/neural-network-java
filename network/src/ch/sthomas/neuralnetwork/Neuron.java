@@ -84,6 +84,16 @@ public class Neuron implements Serializable {
     }
 
     /**
+     * Get the weight of the incoming edge for the
+     *
+     * @param node index of the node
+     * @return the weight of the incoming edge
+     */
+    public double getWeight(int node) {
+        return this.weights[node];
+    }
+
+    /**
      * Set the weights to a new array. May be of different size than the current weights-array.
      *
      * @param weights the new weights

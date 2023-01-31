@@ -116,7 +116,7 @@ public class Network implements Serializable {
         // Calculate cost gradients and add them to the weights
         for (int i = 0; i < this.neurons.length; i++) {
             for (int j = 0; j < this.neurons[i].length; j++) {
-                double[] costGradient = this.getCostGradient(inputs, expectedOutput, activation, i, j);
+                double[] costGradient = this.getNegativeCostGradient(inputs, expectedOutput, activation, i, j);
                 this.neurons[i][j].addToWeights(costGradient);
             }
         }
@@ -193,30 +193,34 @@ public class Network implements Serializable {
     }
 
     /**
+     * Returns the vector containing the cost gradient * -1 for each weight of {@code Neuron[layer][node]}.
+     *
      * @param input       the training input data that leads to the activations array
      * @param activations the 3d-matrix with [Time][Layer][Neuron]
      * @param layer       the second index for activations
      * @param node        the third index for activations
      * @return the cost gradient for the specific node at the specific time
      */
-    private double[] getCostGradient(double[][] input, double[][] expected, double[][][] activations, int layer, int node) {
+    private double[] getNegativeCostGradient(double[][] input, double[][] expected, double[][][] activations, int layer, int node) {
         // input[0].length == input[1].length == input[n].length, the index only changes the time so input[0].length == nr of inputs per data set
         int previousLayerNeuronsLength = layer > 0 ? this.neurons[layer - 1].length : input[0].length;
 
         double[][] aL1k = new double[previousLayerNeuronsLength][activations.length]; // [i][j]; i = incoming edge with activation value of the previous neuron, j = time
         double[] ds = new double[activations.length];
-        double[] magnitude = new double[activations.length];
+        double[][] magnitude = new double[previousLayerNeuronsLength][activations.length];
         // Calculate d C / d w^L_jk
         for (int time = 0; time < activations.length; time++) {
             // Handle layer == 0
             double[] previousLayerActivations = layer > 0 ? activations[time][layer - 1] : input[time];
 
             // Calculate a^(L-1)_k = dz_L / dw_L
-            for (int k = 0; k < aL1k.length; k++) aL1k[k][time] = previousLayerActivations[k];
+            for (int k = 0; k < aL1k.length; k++)
+                aL1k[k][time] = previousLayerActivations[k];
             // Calculate sigmoid'(z^L_j) = da_L / dz_L
             ds[time] = Neuron.sigmoidDerivative(this.neurons[layer][node], input[time]);
             // Calculate 2 * (a^L - expected) = dC_0/da_L
-            magnitude[time] = -2 * (activations[time][layer][node] - expected[time][node]);
+            for (int j = 0; j < magnitude.length; j++)
+                magnitude[j][time] = -getPartialCostDerivativeByActivation(layer, node, j, input, activations, time, expected);
 
 //            System.out.println(activations[time][layer][node] + ", " + expected[time][node] + " so resulting in " + aL1k[0][time] + "*" + ds[time] + "*" + magnitude[time] + " = " + aL1k[0][time] * ds[time] * magnitude[time]);
         }
@@ -225,14 +229,23 @@ public class Network implements Serializable {
         double[] res = new double[aL1k.length];
         for (int i = 0; i < res.length; i++) {
             for (int j = 0; j < activations.length; j++) {
-                res[i] += (aL1k[i][j] * ds[j] * magnitude[j]);
+                res[i] += (aL1k[i][j] * ds[j] * magnitude[i][j]);
             }
 
             // 1. Multiply the Training effectiveness and 2. Take the average instead of the sum
             res[i] *= (Neuron.TRAINING_ALPHA / activations.length);
-
         }
         return res;
+    }
+
+    private double getPartialCostDerivativeByActivation(int layer, int node, int j, double[][] input, double[][][] activations, int time, double[][] expected) {
+        return 2 * (activations[time][layer][node] - expected[time][node]);
+
+        // Alternative: Reloop forward to implement backpropagation
+//        boolean isLastLayer = this.neurons.length - 1 == layer;
+//        return isLastLayer
+//                ? 2 * (activations[time][layer][node] - expected[time][node])
+//                : this.neurons[layer + 1][j].getWeight(node) * Neuron.sigmoidDerivative(this.neurons[layer + 1][j], input[time]) * getPartialCostDerivativeByActivation(layer + 1, node, j, input, activations, time, expected);
     }
 }
 
